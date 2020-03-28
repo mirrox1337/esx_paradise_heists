@@ -1,5 +1,15 @@
 local terminals = Config.Terminals
 local drillpositions = Config.DrillPositions
+local blipRobbery = nil
+
+ESX = nil
+
+Citizen.CreateThread(function()
+	while ESX == nil do
+		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
+		Citizen.Wait(0)
+	end
+end)
 
 RegisterNetEvent('ps:killblip')
 AddEventHandler('ps:killblip', function()
@@ -55,8 +65,13 @@ Citizen.CreateThread(function()
             DisplayHelpText(_U("rob_button"))
         
             if IsControlJustPressed(1, 38) then
-                -- ma raspberry pi?
-                TriggerServerEvent("ps:canHack")
+
+                if IsPedArmed(ped, 4) then
+                    TriggerServerEvent('ps:canHack', id)
+                else
+                    ESX.ShowNotification(_U('no_threat'))
+                end
+
             end
         end
 
@@ -81,7 +96,62 @@ end)
 RegisterNetEvent('ps:canHackResult')
 RegisterNetEvent("paradise_hack_bruteforce")
 RegisterNetEvent("paradise_hack_bruteforce_result")
+RegisterNetEvent("ps:startTimer")
+RegisterNetEvent("ps:cleanupVault")
+RegisterNetEvent("ps:clearMission")
 
+function drawTxt(x,y, width, height, scale, text, r,g,b,a, outline)
+	SetTextFont(0)
+	SetTextScale(scale, scale)
+	SetTextColour(r, g, b, a)
+	SetTextDropshadow(0, 0, 0, 0,255)
+	SetTextDropShadow()
+	if outline then SetTextOutline() end
+
+	BeginTextCommandDisplayText('STRING')
+	AddTextComponentSubstringPlayerName(text)
+	EndTextCommandDisplayText(x - width/2, y - height/2 + 0.005)
+end
+
+AddEventHandler("ps:cleanupVault", function (id)
+    -- close the vault
+    local v = terminals[id]
+
+    local prop = GetClosestObjectOfType(v.x, v.y, v.z, 50.0, GetHashKey("v_ilev_gb_vauldr"), false, false, false)
+    SetEntityHeading(prop, 250.0)
+
+
+    terminals[id].inProgress = false
+end)
+
+AddEventHandler("ps:startTimer", function ()
+    local timer = Config.WaitTime
+
+
+    local b, pos, id = nearInteractionEntity(terminals, 15)
+    if (not b) then return end
+
+    local terminal = terminals[id]
+    terminals[id].inProgress = true
+
+    Citizen.CreateThread(function()
+        while timer > 0 and terminals[id].inProgress do
+            Citizen.Wait(1000)
+
+            if (timer > 0) then
+                timer = timer - 1
+            end
+        end
+    end)
+
+    Citizen.CreateThread(function()
+        while terminals[id].inProgress and timer > 0 do
+            Citizen.Wait(0)
+            drawTxt(0.66, 1.44, 1.0, 1.0, 0.4, _U('robbery_timer', timer), 255, 255, 255, 255)
+        end
+    end)
+
+end)
 
 
 Citizen.CreateThread(function ()
@@ -98,6 +168,7 @@ Citizen.CreateThread(function ()
     AddEventHandler("paradise_hack_bruteforce_result", function (result)
         if (not result) then return end
 
+        --setmissiontext(_U("drill_mission"), 150)
         TriggerServerEvent("ps:hackingFinished")
     end)
 
@@ -121,18 +192,39 @@ Citizen.CreateThread(function ()
     end)
 end)
 
+function setmissiontext(text, time)
+    ClearPrints()
+    SetTextEntry_2("STRING")
+    AddTextComponentString(text)
+    DrawSubtitleTimed(time, 1)
+end
+
+AddEventHandler("ps:clearMission", function ()
+    clearmissiontext()
+end)
+function clearmissiontext()
+    ClearPrints()
+end
 
 
 Citizen.CreateThread(function ()
     while true do
-        Citizen.Wait(0)
-        for k, v in pairs(terminals) do
-            if v.inProgress then
-                DrawMarker(1, v.x, v.y, v.z, 0,0,0, 0,0,0, 0.5,0.5, 0, 0, 0, 233, 0, 150, 0, 0, 2, 0, 0, 0, false)
-            end
+        Citizen.Wait(1)
+        
+        local b, pos, id = nearInteractionEntity(terminals, 999)
+        if (not b) then return end
+
+        local terminal = terminals[id]
+        if (not terminal.inProgress) then return end
+        local playerPos = GetEntityCoords(PlayerPedId(), true)
+
+        if (Vdist(playerPos.x, playerPos.y, playerPos.z, terminal.x, terminal.y, terminal.z) > Config.MaxDistance) then
+            TriggerServerEvent("ps:toofar", id)
         end
+
     end
 end)
+
 
 Citizen.CreateThread(function ()
     RegisterNetEvent("ps_fleecavaultopen")

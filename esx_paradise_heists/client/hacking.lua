@@ -133,6 +133,9 @@ Citizen.CreateThread(function()
             FreezeEntityPosition(PlayerPedId(), true) --If the user is in scaleform we should freeze him to prevent movement.
             DisableControlAction(0, 24, true) --LEFT CLICK disabled while in scaleform
             DisableControlAction(0, 25, true) --RIGHT CLICK disabled while in scaleform
+
+            DisablePlayerFiring(PlayerPedId(), true)
+
             if GetScaleformMovieFunctionReturnBool(ClickReturn) then -- old native?
                 ProgramID = GetScaleformMovieFunctionReturnInt(ClickReturn)
                 print("ProgramID: "..ProgramID) -- Prints the ID of the Apps we click on inside the scaleform, very useful.

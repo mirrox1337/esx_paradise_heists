@@ -108,7 +108,6 @@ Citizen.CreateThread(function ()
 
         AttachEntityToEntity(drillProp, id, GetPedBoneIndex(ped, 28422), 0, 0, 0, 0, 0, 0, false, false, false, false, 2, true)
         SetEntityInvincible(drillProp, true)
-        SetEntityAsNoLongerNeeded(drillProp)
 
         local po = plyPos + GetEntityForwardVector(id) * 1
         TaskPlayAnim(id, "anim@heists@fleeca_bank@drilling", "drill_right_end", 1.0, 0.1, 2000, 0, 0.0, true, true, true)
@@ -116,10 +115,24 @@ Citizen.CreateThread(function ()
 
     end
 
-    
+    function DeleteJackhammer()
+        local position = GetEntityCoords(GetPlayerPed(PlayerId()), false)
+        local object = GetClosestObjectOfType(position.x, position.y, position.z, 15.0, GetHashKey("prop_tool_jackham"), false, false, false)
+        if object ~= 0 then
+            DeleteObject(object)
+        end
+    end
+
+
 
     function StopParadiseDrilling()
         scaleform = nil
+
+        DeleteJackhammer()
+
+        DeleteObject(drillProp)
+        SetEntityAsNoLongerNeeded(drillProp)
+
 
         local ped = PlayerPedId()
 
@@ -128,7 +141,7 @@ Citizen.CreateThread(function ()
 
         ClearPedTasksImmediately(ped)
 
-        DeleteObject(drillProp)
+        
 
         -- stop sounds
         -- unload dicts
