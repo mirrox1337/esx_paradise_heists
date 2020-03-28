@@ -1,5 +1,5 @@
 # esx_paradise_heists
-Fleeca Bank Heisty pro FiveM
+Fleeca Bank Heisty pro FiveM od českého vývojáře
 
 Potřebné addony:
 - ESX
