@@ -1,6 +1,12 @@
 # esx_paradise_heists
 Fleeca Bank Heisty pro FiveM od českého vývojáře
 
+Funkce:
+- Vše v češtině
+- Hackování a drillování jako z GTA: Online
+- Hodně konfiguračních možností
+- Zábavnější než default ESX heisty (musíte nejdřív hacknout terminál a drillovat, takže potřebujete více lidí)
+
 Potřebné addony:
 - ESX
 
